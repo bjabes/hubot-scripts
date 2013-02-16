@@ -31,8 +31,8 @@ lionels = [
 ]
 
 module.exports = (robot) ->
-  robot.hear /lionel/i, (msg) ->
-    msg.send msg.random lionels
-
   robot.hear /.*(prince|seat)/i, (msg) ->
     msg.send "OUTRAGEOUS!"
+
+  robot.hear /lionel/i, (msg) ->
+    msg.send msg.random lionels
