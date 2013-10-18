@@ -5,8 +5,9 @@
 #   None
 #
 # Configuration
-#   HUBOT_DARK_SKY_API_KEY   
+#   HUBOT_DARK_SKY_API_KEY
 #   HUBOT_DARK_SKY_DEFAULT_LOCATION
+#   HUBOT_DARK_SKY_UNITS (optional - us, si, ca, or uk)
 #
 # Commands:
 #   hubot weather - Get the weather for HUBOT_DARK_SKY_DEFAULT_LOCATION
@@ -39,7 +40,9 @@ module.exports = (robot) ->
           msg.send "Couldn't find #{location}"
 
 darkSkyMe = (msg, lat, lng, cb) ->
-  url = "https://api.darkskyapp.com/v1/brief_forecast/#{process.env.HUBOT_DARK_SKY_API_KEY}/#{lat},#{lng}/"
+  url = "https://api.forecast.io/forecast/#{process.env.HUBOT_DARK_SKY_API_KEY}/#{lat},#{lng}/"
+  if process.env.HUBOT_DARK_SKY_UNITS
+    url += "?units=#{process.env.HUBOT_DARK_SKY_UNITS}"
   msg.http(url)
     .get() (err, res, body) ->
       result = JSON.parse(body)
@@ -48,7 +51,7 @@ darkSkyMe = (msg, lat, lng, cb) ->
         cb "#{result.error}"
         return
 
-      response = "Currently: #{result.currentSummary} (#{result.currentTemp}F)"
-      response += "\nNext hour: #{result.hourSummary}"
-      response += "\nToday: #{result.daySummary}"
+      response = "Currently: #{result.currently.summary} (#{result.currently.temperature}°)"
+      response += "\nNext hour: #{result.hourly.summary}"
+      response += "\nToday: #{result.daily.summary}"
       cb response

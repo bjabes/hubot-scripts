@@ -26,6 +26,24 @@ defaultOptions = () ->
     headers:
       "Authorization": "Basic #{auth}"
 
+buildsStatus = (builds) ->
+  buildsLength = builds.length
+  response = ""
+
+  if buildsLength > 0
+    builds.forEach (build) ->
+      response += buildStatusMessage(build)
+      response += "\n" if buildsLength > 1
+
+  response
+
+buildStatusMessage = (build) ->
+  response = ""
+  response += "Build ##{build.number} (#{build.sha1}) of #{build.repo}/#{build.branch} #{build.status}"
+  response += "(#{build.duration}s) #{build.compare}"
+  response += " [Log: #{build.web_url}]"
+
+
 get = (path, params, cb) ->
   options = defaultOptions()
   options.path += path
@@ -73,7 +91,7 @@ module.exports = (robot) ->
       else
         msg.reply "can't help you right now."
 
-  robot.respond /ci build ([-_\.0-9a-zA-Z]+)(\/([-_\.a-zA-z0-9\/]+))?/i, (msg) ->
+  robot.respond /ci build ([-_\.0-9a-zA-Z]+)(\/([-_\+\.a-zA-z0-9\/]+))?/i, (msg) ->
     app     = msg.match[1]
     branch  = msg.match[3] || "master"
     room_id = msg.message.user.room
@@ -88,7 +106,7 @@ module.exports = (robot) ->
 
       msg.send response
 
-  robot.respond /ci setup ([\.\-\/_a-z0-9]+)(\s?([\.\-_a-z0-9]+))?(\s?([\.\-_a-z0-9]+))?/i, (msg) ->
+  robot.respond /ci setup ([\.\-\/_a-z0-9]+)(\s?([\.\-_a-z0-9]+))?/i, (msg) ->
     nwo     = msg.match[1]
     params  = "?nwo=#{nwo}"
     if msg.match[3] != undefined
@@ -128,6 +146,15 @@ module.exports = (robot) ->
       else
         msg.reply "can't predict rooms now."
 
+  robot.respond /ci builds ([0-9]+) ?(building)?$/i, (msg) ->
+    limit = msg.match[1]
+    building = msg.match[2]?
+    get "builds?limit=#{limit}&building=#{building}", {}, (err, statusCode, body) ->
+      builds = JSON.parse(body)
+      response = buildsStatus(builds) || "Builds? Sorry, there's no builds here"
+
+      msg.send response
+
   robot.respond /ci status$/i, (msg) ->
     get "", {}, (err, statusCode, body) ->
       if statusCode == 200
@@ -135,7 +162,7 @@ module.exports = (robot) ->
       else
         msg.send("who knows")
 
-  robot.respond /ci status (-v )?([-_\.0-9a-zA-Z]+)(\/([-_\.a-zA-z0-9\/]+))?/i, (msg) ->
+  robot.respond /ci status (-v )?([-_\.0-9a-zA-Z]+)(\/([-_\+\.a-zA-z0-9\/]+))?/i, (msg) ->
     app    = msg.match[2]
     count  = 5
     branch = msg.match[4] || 'master'
@@ -144,13 +171,8 @@ module.exports = (robot) ->
       count = 1
 
     get "#{app}/#{branch}?limit=#{count}", { }, (err, statusCode, body) ->
-      response = ""
       builds = JSON.parse(body)
-
-      builds.forEach (build) ->
-        response += "Build ##{build.number} (#{build.sha1}) of #{build.repo}/#{build.branch} #{build.status}"
-        response += "(#{build.duration}s) #{build.compare}"
-        response += "\n" if count > 1
+      response = buildsStatus(builds) || "Sorry, no builds found for #{app}/#{branch}"
 
       msg.send response
 

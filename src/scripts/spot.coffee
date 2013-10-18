@@ -20,6 +20,9 @@
 #   hubot volume- - Bumps the volume down.
 #   hubot mute - Sets the volume to 0.
 #   hubot [name here] says turn it down - Sets the volume to 15 and blames [name here].
+#   hubot say <message> - Tells hubot to read a message aloud.
+#   hubot find <song> - See if Spotify knows about a song without attempting to play it.
+#   hubot airplay <Apple TV> - Tell Spot to broadcast to the specified Apple TV.
 #
 # Author:
 #   mcminton
@@ -81,6 +84,12 @@ module.exports = (robot) ->
     params = {q: message.match[1]}
     spotRequest message, '/find', 'post', params, (err, res, body) ->
       message.send(":small_blue_diamond: #{body}")
+  
+  robot.respond /say (.*)/i, (message) ->
+    what = message.match[1]
+    params = {what: what}
+    spotRequest message, '/say', 'put', params, (err, res, body) ->
+      message.send(what)
 
   robot.respond /(.*) says.*turn.*down.*/i, (message) ->
     name = message.match[1]
@@ -88,4 +97,14 @@ module.exports = (robot) ->
     params = {volume: 15}
     spotRequest message, '/volume', 'put', params, (err, res, body) ->
       message.send("Spot volume set to #{body}. :mega:")
-     
+
+  robot.respond /find (.*)/i, (message) ->
+    search = message.match[1]
+    params = {q: search}
+    spotRequest message, '/just-find', 'post', params, (err, res, body) ->
+      message.send(body)
+
+  robot.respond /airplay (.*)/i, (message) ->
+    params = {atv: message.match[1]}
+    spotRequest message, '/airplay', 'put', params, (err, res, body) ->
+      message.send("#{body} :mega:")
