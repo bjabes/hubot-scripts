@@ -39,7 +39,9 @@ princes = [
   "http://i.imgur.com/w6s0E0W.gif",
   "http://i.imgur.com/DyjHj9x.gif",
   "http://i.imgur.com/GEAjaho.gif",
-  "http://i.imgur.com/1N4tx90.gif"
+  "http://i.imgur.com/1N4tx90.gif",
+  "http://i.imgur.com/26YSxdJ.gif",
+  "http://i.imgur.com/lO2AyXT.gif"
 ]
 
 module.exports = (robot) ->
